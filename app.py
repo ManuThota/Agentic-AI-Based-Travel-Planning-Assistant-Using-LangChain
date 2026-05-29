@@ -130,18 +130,37 @@ st.markdown("""
         font-size: 0.9rem;
     }
     
-    /* Reduce space above the sidebar (left side) */
+    /* Reduce space above the sidebar (left side) and move content to the very top */
     [data-testid="stSidebar"] > div:first-child {
-        padding-top: 0px !important;
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
     }
     [data-testid="stSidebar"] {
-        padding-top: 0px !important;
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
     }
     [data-testid="stSidebarUserContent"] {
-        padding-top: 0px !important;
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
     }
-    .st-emotion-cache-1cypcdb, .st-emotion-cache-6qob1r {
-        padding-top: 0px !important;
+    div[data-testid="stSidebar"] div[class*="st-emotion-cache"] {
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
+    }
+    
+    /* Reduce space in the main content area (right side) and move content to the very top */
+    .block-container, [data-testid="stAppViewBlockContainer"] {
+        padding-top: 0.5rem !important;
+        margin-top: 0rem !important;
+    }
+    
+    /* Hide the top Streamlit header (contains Deploy button and 3-dot settings menu) */
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+    /* Hide the footer as well */
+    footer {
+        visibility: hidden !important;
     }
 </style>
 """, unsafe_allow_html=True)
