@@ -147,6 +147,20 @@ st.markdown("""
         padding-top: 0rem !important;
         margin-top: 0rem !important;
     }
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:first-child {
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
+    }
+    /* Reset browser margins for headers in sidebar (e.g. h3 elements) */
+    [data-testid="stSidebar"] h3 {
+        margin-top: 0rem !important;
+        padding-top: 0rem !important;
+        margin-bottom: 0.5rem !important;
+    }
     
     /* Reduce space in the main content area (right side) and move content to the very top */
     .block-container, [data-testid="stAppViewBlockContainer"] {
