@@ -1,0 +1,43 @@
+# Python Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
+# Local Environment Variables (contains API keys)
+.env
+
+# Streamlit Local Secrets (contains local credentials)
+.streamlit/secrets.toml
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Testing / Diagnostics
+.pytest_cache/
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+*.log
