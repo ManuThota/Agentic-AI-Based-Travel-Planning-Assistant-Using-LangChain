@@ -194,21 +194,20 @@ def discover_places(city: str, attraction_type: Optional[str] = None, min_rating
             
         # Sort by rating descending
         filtered_places.sort(key=lambda x: x.get("rating", 0.0), reverse=True)
-        return json.dumps(filtered_places, indent=2)
+        return json.dumps(filtered_places[:4], indent=2)
         
     except Exception as e:
         print(f"Nominatim API Error: {e}. Using mock fallback.")
         return discover_places_local(city, attraction_type, min_rating)
 
 def generate_mock_places_fallback(city: str, attraction_type: Optional[str] = None, min_rating: Optional[float] = None) -> str:
-    """Helper to generate a fallback list of 5 mock attractions in JSON format to prevent API failures from breaking the LLM response schema."""
+    """Helper to generate a fallback list of 4 mock attractions in JSON format to prevent API failures from breaking the LLM response schema."""
     formatted_places = []
     attractions_templates = [
         ("Botanical Garden", "Nature"),
         ("Historical Palace", "Heritage"),
         ("Main Monument", "Monument"),
-        ("Central Beach", "Beach"),
-        ("Adventure Theme Park", "Adventure")
+        ("Central Beach", "Beach")
     ]
     for name_tpl, default_type in attractions_templates:
         name = f"{city.title()} {name_tpl}"
@@ -250,7 +249,7 @@ def generate_mock_places_fallback(city: str, attraction_type: Optional[str] = No
         return json.dumps(formatted_places[:3], indent=2)
         
     filtered.sort(key=lambda x: x.get("rating", 0.0), reverse=True)
-    return json.dumps(filtered, indent=2)
+    return json.dumps(filtered[:4], indent=2)
 
 def discover_places_local(city: str, attraction_type: Optional[str] = None, min_rating: Optional[float] = None) -> str:
     """Helper local places search fallback. Generates mock fallback attractions dynamically."""

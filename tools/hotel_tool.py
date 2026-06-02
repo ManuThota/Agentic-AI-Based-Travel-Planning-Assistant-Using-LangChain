@@ -184,12 +184,12 @@ def recommend_hotels(city: str, max_price: Optional[float] = None, min_rating: O
         if not filtered_hotels:
             # If everything gets filtered out, return the unfiltered list to let the agent pick
             formatted_hotels.sort(key=lambda x: (-x.get("rating", 0.0), x.get("price_per_night", 999999)))
-            return json.dumps(formatted_hotels[:5], indent=2)
+            return json.dumps(formatted_hotels[:3], indent=2)
             
         # Sort by rating descending, then price ascending
         filtered_hotels.sort(key=lambda x: (-x.get("rating", 0.0), x.get("price_per_night", 999999)))
         
-        return json.dumps(filtered_hotels, indent=2)
+        return json.dumps(filtered_hotels[:3], indent=2)
         
     except Exception as e:
         print(f"Amadeus API Error: {e}. Falling back to Nominatim search.")
@@ -251,7 +251,7 @@ def generate_mock_hotels_fallback(city: str, max_price: Optional[float] = None, 
         return json.dumps(formatted_hotels[:3], indent=2)
         
     filtered.sort(key=lambda x: (-x.get("rating", 0.0), x.get("price_per_night", 999999)))
-    return json.dumps(filtered, indent=2)
+    return json.dumps(filtered[:3], indent=2)
 
 def recommend_hotels_local(city: str, max_price: Optional[float] = None, min_rating: Optional[float] = None) -> str:
     """Helper local hotel search fallback. Queries Nominatim for real local hotels dynamically."""
@@ -375,12 +375,12 @@ def recommend_hotels_local(city: str, max_price: Optional[float] = None, min_rat
             filtered_hotels.append(hotel)
             
         if not filtered_hotels:
-            # Return top 5 unfiltered if filters are too strict
+            # Return top 3 unfiltered if filters are too strict
             formatted_hotels.sort(key=lambda x: (-x.get("rating", 0.0), x.get("price_per_night", 999999)))
-            return json.dumps(formatted_hotels[:5], indent=2)
+            return json.dumps(formatted_hotels[:3], indent=2)
             
         filtered_hotels.sort(key=lambda x: (-x.get("rating", 0.0), x.get("price_per_night", 999999)))
-        return json.dumps(filtered_hotels, indent=2)
+        return json.dumps(filtered_hotels[:3], indent=2)
         
     except Exception as e:
         print(f"Exception during Nominatim hotel search: {e}. Returning mock hotel list.")

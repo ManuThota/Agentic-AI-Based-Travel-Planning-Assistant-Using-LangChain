@@ -48,7 +48,7 @@ st.markdown("""
         margin-bottom: 30px;
     }
     
-    /* Premium Styled Cards */
+    /* Premium Styled Cards with smooth floating animations */
     .glass-card {
         background: rgba(22, 27, 34, 0.7);
         border: 1px solid rgba(48, 54, 61, 0.8);
@@ -56,11 +56,43 @@ st.markdown("""
         padding: 20px;
         margin-bottom: 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease, border-color 0.3s ease;
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
     }
     .glass-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-4px) scale(1.005);
         border-color: #4facfe;
+        box-shadow: 0 10px 25px rgba(79, 172, 254, 0.15);
+    }
+    
+    .day-card {
+        border-left: 5px solid #f2cc60 !important;
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .day-card:hover {
+        transform: translateY(-4px) scale(1.005);
+        border-color: #f2cc60 !important;
+        box-shadow: 0 10px 25px rgba(242, 204, 96, 0.15) !important;
+    }
+    .day-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+    }
+    .day-card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #f2cc60;
+    }
+    .day-card-weather {
+        font-size: 0.85rem;
+        color: #c9d1d9;
+        background: rgba(242, 204, 96, 0.1);
+        border: 1px solid rgba(242, 204, 96, 0.2);
+        padding: 2px 10px;
+        border-radius: 20px;
     }
     
     .flight-card {
@@ -140,7 +172,7 @@ st.markdown("""
         margin-top: 0rem !important;
     }
     [data-testid="stSidebarUserContent"] {
-        padding-top: 0rem !important;
+        padding-top: 1.5rem !important;
         margin-top: 0rem !important;
     }
     div[data-testid="stSidebar"] div[class*="st-emotion-cache"] {
@@ -154,6 +186,10 @@ st.markdown("""
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:first-child {
         padding-top: 0rem !important;
         margin-top: 0rem !important;
+    }
+    /* Hide the top sidebar header spacing completely (contains the collapse arrow, pushes elements down) */
+    [data-testid="stSidebarHeader"], .stSidebarHeader, div[class*="stSidebarHeader"] {
+        display: none !important;
     }
     /* Reset browser margins for headers in sidebar (e.g. h3 elements) */
     [data-testid="stSidebar"] h3 {
@@ -180,6 +216,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Imports from agent module
+import importlib
+import agent.travel_agent
+import tools.flight_tool
+import tools.hotel_tool
+import tools.places_tool
+
+importlib.reload(agent.travel_agent)
+importlib.reload(tools.flight_tool)
+importlib.reload(tools.hotel_tool)
+importlib.reload(tools.places_tool)
+
 from agent.travel_agent import get_travel_agent_executor, parse_agent_response
 
 class TravelItineraryPDF(FPDF):
@@ -275,14 +322,13 @@ def create_pdf_document(trip_data: dict, md_text: str) -> bytes:
 
 # Application Title Header
 st.markdown('<div class="banner-title">Vagabond AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="banner-subtitle">Autonomous Travel planning Assistant Powered by LangChain & Groq Llama 3</div>', unsafe_allow_html=True)
 
 # ----------------- SIDEBAR SETTINGS -----------------
-st.sidebar.markdown("### Travel Planning Criteria")
+st.sidebar.markdown("### Trip Settings")
 
 # 1. Source and Destination inputs
-source = st.sidebar.text_input("Source City", "Delhi", placeholder="e.g. Delhi, Mumbai, Bangalore")
-destination = st.sidebar.text_input("Destination City", "Goa", placeholder="e.g. Goa, Srinagar, Jaipur")
+source = st.sidebar.text_input("Source City", "Delhi", placeholder="Origin City")
+destination = st.sidebar.text_input("Destination City", "Goa", placeholder="Destination City")
 
 # 2. Date ranges
 today = datetime.date.today()
@@ -298,19 +344,18 @@ days = (end_date - start_date).days + 1
 nights = days - 1 if days > 1 else 0
 
 # 3. Travel Preferences
-budget_cap = st.sidebar.slider("Maximum Budget (INR)", min_value=5000, max_value=150000, value=30000, step=5000)
-flight_class = st.sidebar.selectbox("Preferred Cabin Class", ["Economy", "Business"])
+budget_cap = st.sidebar.slider("Budget Limit (INR)", min_value=5000, max_value=150000, value=30000, step=5000)
+flight_class = st.sidebar.selectbox("Cabin Class", ["Economy", "Business"])
 travel_style = st.sidebar.multiselect(
-    "Travel Style & Interets", 
+    "Interests", 
     ["Heritage", "Beach", "Nature", "Adventure", "Shopping", "Relaxing"],
     default=["Beach", "Heritage"]
 )
 
 
 # ----------------- MAIN ACTION RENDERER -----------------
-st.markdown("### Describe your custom desires:")
 custom_prompt = st.text_area(
-    "Any special constraints or activities? (e.g. 'I want a luxury hotel', 'prefer Vistara flights', 'I want a relaxed schedule')",
+    "Custom Preferences",
     "Suggest the cheapest flight and a highly rated hotel. Plan a balanced, relaxed vacation.",
     height=80
 )
@@ -335,10 +380,8 @@ if trigger_plan:
             f"Specific preferences: {custom_prompt}."
         )
         
-        st.info("Creating agentic execution plan... Running LangChain Multi-Step ReAct Loop.")
-        
         # Execute the agent runner inside a Streamlit spinner
-        with st.spinner("AI Agent is looking up flights, querying hotels, fetching live forecasts, and assembling budget..."):
+        with st.spinner("Planning your trip..."):
             try:
                 executor = get_travel_agent_executor()
                 response = executor.invoke({"input": query})
@@ -446,32 +489,31 @@ if "trip_json" in st.session_state and st.session_state["trip_json"]:
             st.markdown("</div>", unsafe_allow_html=True)
             
         # Day-by-Day Schedule and weather forecast
-        st.markdown("### Day-Wise Itinerary & Weather expectations")
+        st.markdown("### Day-Wise Itinerary")
         
-        for idx, day in enumerate(itinerary):
-            day_num = day.get("day", idx + 1)
-            weather_desc = day.get("weather", "Weather forecast unavailable")
-            
-            with st.expander(f"Day {day_num} - Outline & Forecast", expanded=(idx == 0)):
-                # Weather info header
-                st.markdown(f"""
-                <div class='day-weather'>
-                    <b>Expected Weather:</b> {weather_desc}
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Render daily activities
-                for act in day.get("activities", []):
-                    st.markdown(f"""
-                    <div class='timeline-item'>
-                        <div class='timeline-time'>{act.get('time', 'Time')}</div>
-                        <div class='timeline-title'>{act.get('place', 'POI')}</div>
-                        <div class='timeline-desc'>{act.get('description', '')}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+        # Render days 2 per row
+        for i in range(0, len(itinerary), 2):
+            cols = st.columns(2)
+            for col_idx in range(2):
+                if i + col_idx < len(itinerary):
+                    day = itinerary[i + col_idx]
+                    day_num = day.get("day", i + col_idx + 1)
+                    weather_desc = day.get("weather", "Weather forecast unavailable")
+                    
+                    activities_html = ""
+                    for act in day.get("activities", []):
+                        time_val = act.get('time', 'Time')
+                        place_val = act.get('place', 'POI')
+                        desc_val = act.get('description', '')
+                        activities_html += f'<div class="timeline-item"><div class="timeline-time">{time_val}</div><div class="timeline-title">{place_val}</div><div class="timeline-desc">{desc_val}</div></div>'
+                        
+                    day_card_html = f'<div class="glass-card day-card" style="height: 100%;"><div class="day-card-header"><span class="day-card-title">Day {day_num}</span><span class="day-card-weather">Weather: {weather_desc}</span></div><div class="day-card-body">{activities_html}</div></div>'
+                    
+                    with cols[col_idx]:
+                        st.markdown(day_card_html, unsafe_allow_html=True)
                     
         # Budget section and reasoning
-        st.markdown("### Budget Estimator & Reasoning")
+        st.markdown("### Cost & Recommendation Details")
         col_budget_data, col_budget_chart = st.columns([1, 1])
         
         with col_budget_data:

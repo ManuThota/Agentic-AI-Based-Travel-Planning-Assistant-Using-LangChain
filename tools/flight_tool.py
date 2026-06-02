@@ -308,7 +308,7 @@ def search_flights(
         else:
             formatted_flights.sort(key=lambda x: x.get("price", 999999))
             
-        return json.dumps(formatted_flights, indent=2)
+        return json.dumps(formatted_flights[:3], indent=2)
         
     except Exception as e:
         print(f"Amadeus API Error: {e}. Falling back to dynamic simulation.")
@@ -340,4 +340,4 @@ def search_flights_local(source: str, destination: str, preferred_class: str, so
     else:
         simulated_flights.sort(key=lambda x: x.get("price", 999999))
         
-    return json.dumps(simulated_flights, indent=2)
+    return json.dumps(simulated_flights[:3], indent=2)
